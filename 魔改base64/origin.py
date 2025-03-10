@@ -65,3 +65,8 @@ print(f"Encoded: {encoded_str}")
 
 decoded_data = base64_decode(encoded_str)
 print(f"Decoded: {decoded_data.decode('utf-8')}")
+
+import base64
+print('编码是否一致',encoded_str == base64.b64encode(original_data).decode('utf-8'))
+print('解码是否一致',decoded_data == base64.b64decode(encoded_str))
+print('加解密结果是否一致',original_data == decoded_data)

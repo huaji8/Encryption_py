@@ -84,9 +84,11 @@ def base64_decode(encoded_str):
     return bytes(decoded_bytes)
 
 
-
-BASE64_CHARS = Gen_table("huaji888")
+salt = 'huaji888'
+BASE64_CHARS = Gen_table(salt)
 print(BASE64_CHARS)
+
+
 
 original_data = '疯狂的坤坤'.encode('utf-8')
 encoded_str = base64_encode(original_data)
@@ -96,3 +98,5 @@ print(f"Encoded: {encoded_str}")
 decoded_data = base64_decode(encoded_str)
 print(f"Decoded: {decoded_data.decode('utf-8')}")
 
+print('两次Table是否一致',BASE64_CHARS == Gen_table(salt))
+print('魔改加解密结果是否一致',original_data == decoded_data)
