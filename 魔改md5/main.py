@@ -3,6 +3,7 @@ import math
 #1.修改初始化常量
 #2.自定义位移序列
 #3.改变T表
+#4.或许可以修改F,G,H,I函数彻底魔改掉算法 但是可能会冲突懒得了
 def md5(message):
     A = 0x89ABCDEF
     B = 0xFEDCBA98
