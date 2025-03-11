@@ -330,18 +330,20 @@ class CryptSM4(object):
         
         
         
-key = b'3l5butlj26hvv999'
-value = b'111'
-iv = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+key = '3l5butlj26hvv999'.encode('utf-8')
+value = '111'.encode('utf-8')
+iv = '4l5butlj26hvv999'.encode('utf-8')
 crypt_sm4 = CryptSM4()
 
 
 crypt_sm4.set_key(key, SM4_ENCRYPT)
 encrypt_value = crypt_sm4.crypt_cbc(iv , value)
+
 crypt_sm4.set_key(key, SM4_DECRYPT)
 decrypt_value = crypt_sm4.crypt_cbc(iv , encrypt_value)
 
-print('key:', key)
-print('value:', value)
-print('encrypt_value:', encrypt_value)
-print('decrypt_value:', decrypt_value)
+print('key:', key.decode('utf-8'))
+print('iv:', iv.decode('utf-8'))
+print('value:', value.decode('utf-8'))
+print('encrypt_value:', encrypt_value.hex())
+print('decrypt_value:', decrypt_value.decode('utf-8'))
