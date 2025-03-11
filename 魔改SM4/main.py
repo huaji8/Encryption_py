@@ -1,39 +1,22 @@
-
+#1.修改S盒 遍历异或0xbd  SM4_BOXES_TABLE = [x ^ 0xbd for x in original_SM4_BOXES]
+#2.修改CK常量 遍历异或0x12345678 SM4_CK = [x ^ 0x12345678 for x in original_SM4_CK]
+#3.修改密钥扩展算法 这里不给出因为我要偷偷用嘿嘿。。。
 import copy
 from random import choice
 
 
 xor = lambda a, b:list(map(lambda x, y: x ^ y, a, b))
-
 rotl = lambda x, n:((x << n) & 0xffffffff) | ((x >> (32 - n)) & 0xffffffff)
-
 get_uint32_be = lambda key_data:((key_data[0] << 24) | (key_data[1] << 16) | (key_data[2] << 8) | (key_data[3]))
-
 put_uint32_be = lambda n:[((n>>24)&0xff), ((n>>16)&0xff), ((n>>8)&0xff), ((n)&0xff)]
-
 pkcs7_padding = lambda data, block=16: data + [(16 - len(data) % block)for _ in range(16 - len(data) % block)]
-
 zero_padding = lambda data, block=16: data + [0 for _ in range(16 - len(data) % block)]
-
 pkcs7_unpadding = lambda data: data[:-data[-1]]
-
 zero_unpadding = lambda data,i =1:data[:-i] if data[-i] == 0 else i+1
-
 list_to_bytes = lambda data: b''.join([bytes((i,)) for i in data])
-
 bytes_to_list = lambda data: [i for i in data]
-
 random_hex = lambda x: ''.join([choice('0123456789abcdef') for _ in range(x)])
-
-
 def exp_mod(x: int, e: int, p: int) -> int:
-    """
-    x ** e (mod p)
-    :param x:
-    :param e:
-    :param p:
-    :return:
-    """
     r = 1
     while e > 0:
         if e & 1 == 1:
@@ -41,25 +24,9 @@ def exp_mod(x: int, e: int, p: int) -> int:
         x = (x * x) % p
         e >>= 1
     return r
-
-
 def inv_mod(x: int, p: int) -> int:
-    """
-    x ^ -1 (mod p)
-    :param x:
-    :param p:
-    :return:
-    """
     return exp_mod(x, p - 2, p)
-
-
 def pboc_padding(data, block=16):
-    """
-    参考PBOC2018规范第7部分11.1.1章节。如果数据长度不是分组长度的整数倍，则填充1字节0x80，再填充0x00到分组长度的整数倍。如果数据长度是分组长度的整数倍则不填充。
-    :param data: 待补位数据，bytes类型
-    :param block_size: 加密数据库的长度
-    :return: 补位后的数据
-    """
     data = data.hex().upper()
     block = block * 2
     if (len(data) % block) != 0:
@@ -67,14 +34,7 @@ def pboc_padding(data, block=16):
     while (len(data) % block) != 0:
         data = data + '00'
     return bytes_to_list(bytes.fromhex(data))
-
 def iso9797m2_padding(data, block=16):
-    """
-    参考PBOC2018规范第7部分11.1.1章节。如果数据长度不是分组长度的整数倍，则填充1字节0x80，再填充0x00到分组长度的整数倍。如果数据长度是分组长度的整数倍则不填充。
-    :param data: 待补位数据，bytes类型
-    :param block_size: 加密数据库的长度
-    :return: 补位后的数据
-    """
     data = data.hex().upper()
     block = block * 2
     data = data + '80'
@@ -100,7 +60,7 @@ def iso9797m2_unpadding(data:list):
     return data
 
 
-SM4_BOXES_TABLE = [
+original_SM4_BOXES = [
     0xd6, 0x90, 0xe9, 0xfe, 0xcc, 0xe1, 0x3d, 0xb7, 0x16, 0xb6, 0x14, 0xc2, 0x28, 0xfb, 0x2c,
     0x05, 0x2b, 0x67, 0x9a, 0x76, 0x2a, 0xbe, 0x04, 0xc3, 0xaa, 0x44, 0x13, 0x26, 0x49, 0x86,
     0x06, 0x99, 0x9c, 0x42, 0x50, 0xf4, 0x91, 0xef, 0x98, 0x7a, 0x33, 0x54, 0x0b, 0x43, 0xed,
@@ -121,12 +81,11 @@ SM4_BOXES_TABLE = [
     0x48,
 ]
 
-
+SM4_BOXES_TABLE = [x ^ 0xbd for x in original_SM4_BOXES]
 
 SM4_FK = [0xa3b1bac6, 0x56aa3350, 0x677d9197, 0xb27022dc]
 
-
-SM4_CK = [
+original_SM4_CK = [
     0x00070e15, 0x1c232a31, 0x383f464d, 0x545b6269,
     0x70777e85, 0x8c939aa1, 0xa8afb6bd, 0xc4cbd2d9,
     0xe0e7eef5, 0xfc030a11, 0x181f262d, 0x343b4249,
@@ -136,6 +95,8 @@ SM4_CK = [
     0xa0a7aeb5, 0xbcc3cad1, 0xd8dfe6ed, 0xf4fb0209,
     0x10171e25, 0x2c333a41, 0x484f565d, 0x646b7279
 ]
+SM4_CK = [x ^ 0x12345678 for x in original_SM4_CK]
+
 
 SM4_ENCRYPT = 0
 SM4_DECRYPT = 1
@@ -154,9 +115,6 @@ class CryptSM4(object):
         self.sk = [0] * 32
         self.mode = mode
         self.padding_mode = padding_mode
-    # Calculating round encryption key.
-    # args:    [in] a: a is a 32 bits unsigned value;
-    # return: sk[i]: i{0,1,2,3,...31}.
 
     @classmethod
     def _round_key(cls, ka):
@@ -170,19 +128,8 @@ class CryptSM4(object):
         rk = bb ^ (rotl(bb, 13)) ^ (rotl(bb, 23))
         return rk
 
-    # Calculating and getting encryption/decryption contents.
-    # args:    [in] x0: original contents;
-    # args:    [in] x1: original contents;
-    # args:    [in] x2: original contents;
-    # args:    [in] x3: original contents;
-    # args:    [in] rk: encryption/decryption key;
-    # return the contents of encryption/decryption contents.
     @classmethod
     def _f(cls, x0, x1, x2, x3, rk):
-        # "T algorithm" == "L algorithm" + "t algorithm".
-        # args:    [in] a: a is a 32 bits unsigned value;
-        # return: c: c is calculated with line algorithm "L" and nonline
-        # algorithm "t"
         def _sm4_l_t(ka):
             b = [0, 0, 0, 0]
             a = put_uint32_be(ka)
@@ -248,7 +195,6 @@ class CryptSM4(object):
         return out_put
 
     def crypt_ecb(self, input_data):
-        # SM4-ECB block encryption/decryption
         if self.mode == SM4_ENCRYPT:
             if self.padding_mode == NoPadding:
                 pass
@@ -282,7 +228,6 @@ class CryptSM4(object):
         return list_to_bytes(output_data)
 
     def crypt_cbc(self, iv, input_data):
-        # SM4-CBC buffer encryption/decryption
         i = 0
         output_data = []
         tmp_input = [0] * 16
@@ -298,7 +243,6 @@ class CryptSM4(object):
                 input_data = pkcs7_padding(bytes_to_list(input_data))
             if self.padding_mode == PBOC:
                 input_data = pboc_padding(input_data)
-            # input_data = pkcs7_padding(bytes_to_list(input_data))
             length = len(input_data)
             while length > 0:
                 tmp_input[0:16] = xor(input_data[i:i + 16], iv[0:16])
